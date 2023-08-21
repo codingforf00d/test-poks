@@ -1,0 +1,34 @@
+version: '3'
+services:
+  new:
+    build:
+      context: ./new
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./new:/app
+
+  players:
+    build:
+      context: ./players
+      dockerfile: Dockerfile
+    # ports:
+    #   - '3001:3000'
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./players:/app
+
+  tables:
+    build:
+      context: ./tables
+      dockerfile: Dockerfile
+    # ports:
+    #   - '3002:3000'
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./tables:/app
