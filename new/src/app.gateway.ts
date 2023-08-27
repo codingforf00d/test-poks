@@ -36,6 +36,9 @@ export class Gateway {
         else if (hasPlayerFilter) {
             subscription = this.dataProvider.subscribeToPlayers(body.playerFilter);
         }
+        else if (!hasPlayerFilter && !hasTableFilter) {
+            return;
+        }
 
         this.clearSubscription(client.id);
 
