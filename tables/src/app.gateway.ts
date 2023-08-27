@@ -5,11 +5,12 @@ import { tableGenerator } from "./tables.generator";
 
 @WebSocketGateway()
 export class Gateway {
-    @SubscribeMessage('tables')
+    @SubscribeMessage('subscribe')
     subscribeToTables(
       @ConnectedSocket() client: Socket,
     ) {
         const generator = tableGenerator();
-        setInterval(() => client.emit('data', generator.next()), 1000);
+        const emitter = setInterval(() => client.emit('data', generator.next()), 1000);
+        client.on('close', emitter.unref);
     }
 }

@@ -1,10 +1,11 @@
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 type GameType = 'NLH' | 'PLO';
 
 type Player = {playerId: string; stackAtCents: number; cards: string[]};
 
-type Table = {
+export type Table = {
+  tableId: number;
   gameType: GameType;
   bbInCents: number;
   anteInCents?: number;
@@ -30,7 +31,8 @@ export function* tableGenerator(): Generator<Table> {
       cards: [_.sample(deck), _.sample(deck)] // Карты могут быть одинаковые, но в рамках задачи это не важно
     }))
   
-    const obj = {
+    const table: Table = {
+      tableId: _.random(1, 6),
       gameType: _.sample<GameType>(['NLH', 'PLO']),
       bbInCents: _.random(0, 100),
       organizationId: _.sample(['org1', 'org2', 'org3', 'org4', 'org5']),
@@ -38,6 +40,6 @@ export function* tableGenerator(): Generator<Table> {
       seats,
     };
 
-    yield obj;
+    yield table;
   }
 }

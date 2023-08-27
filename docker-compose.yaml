@@ -8,27 +8,21 @@ services:
       - '3000:3000'
     environment:
       - NODE_ENV=production
-    volumes:
-      - ./new:/app
 
   players:
     build:
       context: ./players
       dockerfile: Dockerfile
-    # ports:
-    #   - '3001:3000'
+    ports:
+      - '3001:3000'
     environment:
       - NODE_ENV=production
-    volumes:
-      - ./players:/app
 
   tables:
     build:
       context: ./tables
       dockerfile: Dockerfile
-    # ports:
-    #   - '3002:3000'
+    ports:
+      - '3002:3000'
     environment:
       - NODE_ENV=production
-    volumes:
-      - ./tables:/app

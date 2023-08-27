@@ -1,9 +1,10 @@
-import _ from 'lodash';
+import * as _ from 'lodash';
 
-type Player = {
+export type Player = {
   playerId: string,
   name: string,
-  balanceAtCents: number
+  balanceAtCents: number,
+  tableIds: number[]
 };
 
 export function* playersGenerator(): Generator<Player> {
@@ -12,7 +13,8 @@ export function* playersGenerator(): Generator<Player> {
     yield {
       playerId,
       name: playerId,
-      balanceAtCents: _.random(100, 20_000)
+      balanceAtCents: _.random(100, 20_000),
+      tableIds: _.sample([[1], [2,3], [4,5,6], []])
     };
   }
 }
