@@ -1,8 +1,26 @@
 import _ from 'lodash'
-import { Player } from '@players';
-import { Table } from '@tables';
+
+export type Player = {
+    playerId: string,
+    name: string,
+    balanceAtCents: number,
+    tableIds: number[]
+  };
+
+type GameType = 'NLH' | 'PLO';
+
+export type Table = {
+  tableId: number;
+  gameType: GameType;
+  bbInCents: number;
+  anteInCents?: number;
+  organizationId: string;
+  size: number;
+  seats: Array<Player>;
+}
 
 export type TableFilter = {
+    tableId?: number;
     gameType?: 'NLH' | 'PLO';
     bbAtCents?: [number, number];
     anteAtCents?: [number, number];
@@ -59,6 +77,12 @@ export const tableFilter = (data: Table, filter: TableFilter) => {
     if (filter.size != null) {
         if (!_.inRange(data.size, filter.size[0], filter.size[1])) {
             return false
+        }
+    }
+
+    if (filter.tableId != null) {
+        if (filter.tableId !== data.tableId) {
+            return false;
         }
     }
 

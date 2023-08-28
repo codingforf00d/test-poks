@@ -6,6 +6,4 @@ COPY . .
 
 RUN yarn && yarn build
 
-ENV NODE_ENV=production
-
 CMD ["yarn", "start"]

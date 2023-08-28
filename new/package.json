@@ -5,10 +5,6 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
-  "imports": {
-    "@tables": "../tables/src",
-    "@players": "../players/src"
-  },
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

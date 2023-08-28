@@ -18,23 +18,24 @@ export class Gateway {
 
     @SubscribeMessage('subscribe')
     subscribeToData(
-        @MessageBody() body: MsgBody,
+        @MessageBody() body: string,
         @ConnectedSocket() client: Socket,
     ){
-        const hasTableFilter = 'tableFilter' in body;
-        const hasPlayerFilter = 'playerFilter' in body;
+        const data = JSON.parse(body);
+        const hasTableFilter = 'tableFilter' in data;
+        const hasPlayerFilter = 'playerFilter' in data;
         let subscription: EventEmitter;
 
         if (hasTableFilter && hasPlayerFilter) {
-            const tableSubscription = this.dataProvider.subscribeToTables(body.tableFilter);
-            const playerSubscription = this.dataProvider.subscribeToPlayers(body.playerFilter);
+            const tableSubscription = this.dataProvider.subscribeToTables(data.tableFilter);
+            const playerSubscription = this.dataProvider.subscribeToPlayers(data.playerFilter);
             subscription = combineLatest(tableSubscription, playerSubscription);
         }
         else if (hasTableFilter) {
-            subscription = this.dataProvider.subscribeToTables(body.tableFilter);
+            subscription = this.dataProvider.subscribeToTables(data.tableFilter);
         }
         else if (hasPlayerFilter) {
-            subscription = this.dataProvider.subscribeToPlayers(body.playerFilter);
+            subscription = this.dataProvider.subscribeToPlayers(data.playerFilter);
         }
         else if (!hasPlayerFilter && !hasTableFilter) {
             return;

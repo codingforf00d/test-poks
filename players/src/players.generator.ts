@@ -9,7 +9,7 @@ export type Player = {
 
 export function* playersGenerator(): Generator<Player> {
   while (true) {
-    const playerId = `player${_.random(1, 50)}`
+    const playerId = `player${_.random(1, 6)}`
     yield {
       playerId,
       name: playerId,

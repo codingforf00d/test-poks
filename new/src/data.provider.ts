@@ -1,5 +1,5 @@
 import {io} from 'socket.io-client';
-import EventEmitter from 'events';
+import {EventEmitter} from 'events';
 
 import { TableFilter, PlayerFilter, playerFilter, tableFilter } from './filter.engine';
 
