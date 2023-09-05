@@ -7,24 +7,26 @@ import { TableFilter, PlayerFilter, playerFilter, tableFilter } from './filter.e
 export class DataProvider {
 
     subscribeToTables(filter: TableFilter) {
-        const socket = io('ws://tables:3000').emit('subscribe');
+        const socket = io('ws://localhost:3002').emit('subscribe');
         const eventEmitter = new EventEmitter();
+        // value - массив стейтов столов
         socket.on('data', ({value}) => {
-            if (tableFilter(value, filter)) {
-                eventEmitter.emit('data', {value, id: socket.id})
-            }
+            const filteredTables = value.filter((table) => tableFilter(table, filter))
+            eventEmitter.emit('data', {value: filteredTables, id: socket.id})
         });
-        
-        return eventEmitter;
+
+        const closeSocket = () => socket.close();
+
+        return [eventEmitter, closeSocket];
     }
 
     subscribeToPlayers(filter: PlayerFilter) {
-        const socket = io('ws://players:3000').emit('subscribe');
+        const socket = io('ws://localhost:3001').emit('subscribe');
         const eventEmitter = new EventEmitter();
+        // value - массив стейтов игроков
         socket.on('data', ({value}) => {
-            if (playerFilter(value, filter)) {
-                eventEmitter.emit('data', {value, id: socket.id});
-            }
+            const filteredPlayers = value.filter((player) => playerFilter(player, filter))
+            eventEmitter.emit('data', {value: filteredPlayers, id: socket.id});
         });
         
         return eventEmitter;
@@ -43,6 +45,12 @@ export function combineLatest(...subscriptions: EventEmitter[]) {
             eventEmitter.emit('data', newState);
         });
     }
-    
-    return eventEmitter;
+
+    const stopSubscriptions = () => {
+        for (const subscription of subscriptions) {
+            subscription.removeAllListeners();
+        }
+    }
+
+    return [eventEmitter, stopSubscriptions];
 }

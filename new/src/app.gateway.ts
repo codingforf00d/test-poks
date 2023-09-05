@@ -21,7 +21,7 @@ export class Gateway {
         @MessageBody() body: string,
         @ConnectedSocket() client: Socket,
     ){
-        const data = JSON.parse(body);
+        const data: MsgBody = JSON.parse(body);
         const hasTableFilter = 'tableFilter' in data;
         const hasPlayerFilter = 'playerFilter' in data;
         let subscription: EventEmitter;
@@ -29,7 +29,7 @@ export class Gateway {
         if (hasTableFilter && hasPlayerFilter) {
             const tableSubscription = this.dataProvider.subscribeToTables(data.tableFilter);
             const playerSubscription = this.dataProvider.subscribeToPlayers(data.playerFilter);
-            subscription = combineLatest(tableSubscription, playerSubscription);
+            const [subscription, stopSubscription] = combineLatest(tableSubscription, playerSubscription);
         }
         else if (hasTableFilter) {
             subscription = this.dataProvider.subscribeToTables(data.tableFilter);
@@ -54,9 +54,33 @@ export class Gateway {
         this.clearSubscription(client.id);
     }
 
-    private clearSubscription(clientId: string) {
+    private createSubscription(data: MsgBody) {
+        const hasTableFilter = 'tableFilter' in data;
+        const hasPlayerFilter = 'playerFilter' in data;
+        let subscription: EventEmitter;
+
+        if (hasTableFilter && hasPlayerFilter) {
+            const tableSubscription = this.dataProvider.subscribeToTables(data.tableFilter);
+            const playerSubscription = this.dataProvider.subscribeToPlayers(data.playerFilter);
+            const [subscription, stopSubscription] = combineLatest(tableSubscription, playerSubscription);
+        }
+        else if (hasTableFilter) {
+            subscription = this.dataProvider.subscribeToTables(data.tableFilter);
+        }
+        else if (hasPlayerFilter) {
+            subscription = this.dataProvider.subscribeToPlayers(data.playerFilter);
+        }
+        else if (!hasPlayerFilter && !hasTableFilter) {
+            return;
+        }
+    }
+
+    private clearSubscription(clientId: string, stopChildSubscriptions?: () => void) {
         const subscription = this.subscriptions.get(clientId);
         if (subscription) {
+            if (stopChildSubscriptions) {
+                stopChildSubscriptions();
+            }
             subscription.removeAllListeners();
         }
     }
