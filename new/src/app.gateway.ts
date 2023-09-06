@@ -3,6 +3,7 @@ import { DataProvider, combineLatest } from "./data.provider";
 import { PlayerFilter, TableFilter } from "./filter.engine";
 import { Socket } from "socket.io-client";
 import { EventEmitter } from "stream";
+import { Subject } from "./data.provider";
 
 
 type MsgBody = {
@@ -14,7 +15,7 @@ type MsgBody = {
 @WebSocketGateway()
 export class Gateway {
     private dataProvider = new DataProvider();
-    private subscriptions: Map<string, EventEmitter> = new Map();
+    private subscriptions: Map<string, Subject> = new Map();
 
     @SubscribeMessage('subscribe')
     subscribeToData(
@@ -24,12 +25,12 @@ export class Gateway {
         const data: MsgBody = JSON.parse(body);
         const hasTableFilter = 'tableFilter' in data;
         const hasPlayerFilter = 'playerFilter' in data;
-        let subscription: EventEmitter;
+        let subscription: Subject;
 
         if (hasTableFilter && hasPlayerFilter) {
             const tableSubscription = this.dataProvider.subscribeToTables(data.tableFilter);
             const playerSubscription = this.dataProvider.subscribeToPlayers(data.playerFilter);
-            const [subscription, stopSubscription] = combineLatest(tableSubscription, playerSubscription);
+            subscription = combineLatest(tableSubscription, playerSubscription);
         }
         else if (hasTableFilter) {
             subscription = this.dataProvider.subscribeToTables(data.tableFilter);
@@ -54,34 +55,10 @@ export class Gateway {
         this.clearSubscription(client.id);
     }
 
-    private createSubscription(data: MsgBody) {
-        const hasTableFilter = 'tableFilter' in data;
-        const hasPlayerFilter = 'playerFilter' in data;
-        let subscription: EventEmitter;
-
-        if (hasTableFilter && hasPlayerFilter) {
-            const tableSubscription = this.dataProvider.subscribeToTables(data.tableFilter);
-            const playerSubscription = this.dataProvider.subscribeToPlayers(data.playerFilter);
-            const [subscription, stopSubscription] = combineLatest(tableSubscription, playerSubscription);
-        }
-        else if (hasTableFilter) {
-            subscription = this.dataProvider.subscribeToTables(data.tableFilter);
-        }
-        else if (hasPlayerFilter) {
-            subscription = this.dataProvider.subscribeToPlayers(data.playerFilter);
-        }
-        else if (!hasPlayerFilter && !hasTableFilter) {
-            return;
-        }
-    }
-
-    private clearSubscription(clientId: string, stopChildSubscriptions?: () => void) {
+    private clearSubscription(clientId: string) {
         const subscription = this.subscriptions.get(clientId);
         if (subscription) {
-            if (stopChildSubscriptions) {
-                stopChildSubscriptions();
-            }
-            subscription.removeAllListeners();
+            subscription.clearSubscription();
         }
     }
 }

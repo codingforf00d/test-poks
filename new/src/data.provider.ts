@@ -4,39 +4,57 @@ import {EventEmitter} from 'events';
 import { TableFilter, PlayerFilter, playerFilter, tableFilter } from './filter.engine';
 
 
+export class Subject extends EventEmitter {
+    constructor(private childSubscriptions?: Subject[]) {
+        super();
+    }
+
+    clearSubscription() {
+        this.removeAllListeners();
+        if (this.childSubscriptions) {
+            for (const sub of this.childSubscriptions) {
+                sub.removeAllListeners();
+            }
+        }
+    }
+}
+
 export class DataProvider {
 
     subscribeToTables(filter: TableFilter) {
         const socket = io('ws://localhost:3002').emit('subscribe');
-        const eventEmitter = new EventEmitter();
+        const subject = new Subject();
         // value - массив стейтов столов
-        socket.on('data', ({value}) => {
-            const filteredTables = value.filter((table) => tableFilter(table, filter))
-            eventEmitter.emit('data', {value: filteredTables, id: socket.id})
+        socket.on('data', (updates) => {
+            const filteredTables = updates.filter(({value}) => tableFilter(value, filter));
+            if (filteredTables.length > 0) {
+                subject.emit('data', {value: filteredTables, id: socket.id});
+            }
         });
 
-        const closeSocket = () => socket.close();
 
-        return [eventEmitter, closeSocket];
+        return subject;
     }
 
     subscribeToPlayers(filter: PlayerFilter) {
         const socket = io('ws://localhost:3001').emit('subscribe');
-        const eventEmitter = new EventEmitter();
+        const subject = new Subject();
         // value - массив стейтов игроков
-        socket.on('data', ({value}) => {
-            const filteredPlayers = value.filter((player) => playerFilter(player, filter))
-            eventEmitter.emit('data', {value: filteredPlayers, id: socket.id});
+        socket.on('data', (updates) => {
+            const filteredPlayers: any[] = updates.filter(({value}) => playerFilter(value, filter))
+            if (filteredPlayers.length > 0) {
+                subject.emit('data', {value: filteredPlayers, id: socket.id});
+            }
         });
         
-        return eventEmitter;
+        return subject;
     }
 }
 
 
-export function combineLatest(...subscriptions: EventEmitter[]) {
+export function combineLatest(...subscriptions: Subject[]) {
     let state = {};
-    const eventEmitter = new EventEmitter();
+    const eventEmitter = new Subject(subscriptions);
 
     for (const subscription of subscriptions) {
         subscription.on('data', ({id, value}) => {
@@ -46,11 +64,5 @@ export function combineLatest(...subscriptions: EventEmitter[]) {
         });
     }
 
-    const stopSubscriptions = () => {
-        for (const subscription of subscriptions) {
-            subscription.removeAllListeners();
-        }
-    }
-
-    return [eventEmitter, stopSubscriptions];
+    return eventEmitter;
 }
