@@ -2,7 +2,6 @@ import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway } from
 import { DataProvider, combineLatest } from "./data.provider";
 import { PlayerFilter, TableFilter } from "./filter.engine";
 import { Socket } from "socket.io-client";
-import { EventEmitter } from "stream";
 import { Subject } from "./data.provider";
 
 
@@ -41,6 +40,8 @@ export class Gateway {
         else if (!hasPlayerFilter && !hasTableFilter) {
             return;
         }
+
+        client.on('close', () => this.clearSubscription(client));
 
         this.clearSubscription(client);
 
