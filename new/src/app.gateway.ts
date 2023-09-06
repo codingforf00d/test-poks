@@ -15,7 +15,7 @@ type MsgBody = {
 @WebSocketGateway()
 export class Gateway {
     private dataProvider = new DataProvider();
-    private subscriptions: Map<string, Subject> = new Map();
+    private subscriptions: WeakMap<Socket, Subject> = new Map();
 
     @SubscribeMessage('subscribe')
     subscribeToData(
@@ -42,21 +42,21 @@ export class Gateway {
             return;
         }
 
-        this.clearSubscription(client.id);
+        this.clearSubscription(client);
 
         const newSubscription = subscription.on('data', (data) => client.emit('data', data));
-        this.subscriptions.set(client.id, newSubscription);
+        this.subscriptions.set(client, newSubscription);
     }
 
     @SubscribeMessage('unsubscribe')
     unsubscribe(
         @ConnectedSocket() client: Socket,
     ) {
-        this.clearSubscription(client.id);
+        this.clearSubscription(client);
     }
 
-    private clearSubscription(clientId: string) {
-        const subscription = this.subscriptions.get(clientId);
+    private clearSubscription(client: Socket) {
+        const subscription = this.subscriptions.get(client);
         if (subscription) {
             subscription.clearSubscription();
         }
