@@ -20,7 +20,8 @@ export class Gateway {
     subscribeToData(
         @MessageBody() body: string,
         @ConnectedSocket() client: Socket,
-    ){
+    ){  
+        client.on('close', () => this.clearSubscription(client));
         const data: MsgBody = JSON.parse(body);
         const hasTableFilter = 'tableFilter' in data;
         const hasPlayerFilter = 'playerFilter' in data;
@@ -40,8 +41,6 @@ export class Gateway {
         else if (!hasPlayerFilter && !hasTableFilter) {
             return;
         }
-
-        client.on('close', () => this.clearSubscription(client));
 
         this.clearSubscription(client);
 
